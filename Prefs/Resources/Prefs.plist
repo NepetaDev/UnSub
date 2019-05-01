@@ -14,6 +14,14 @@
 		</dict>
 
 		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>DISABLE_IN</string>
+			<key>isStaticText</key>
+			<true/>
+		</dict>
+		<dict>
 			<key>cellClass</key>
 			<string>HBTwitterCell</string>
 			<key>label</key>
@@ -29,7 +37,7 @@
 			<key>isController</key>
 			<string>1</string>
 			<key>label</key>
-			<string>DISABLE_SUBSTITUTE_IN</string>
+			<string>SELECT_APPS</string>
 			<key>ALAllowsSelection</key>
 			<string>1</string>
 			<key>ALSettingsKeyPrefix</key>

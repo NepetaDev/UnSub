@@ -27,6 +27,7 @@ extern "C" void BKSTerminateApplicationForReasonAndReportWithDescription(NSStrin
 
     NSMutableDictionary *ourDictionary = [(%orig ?: @{}) mutableCopy];
     ourDictionary[@"_SafeMode"] = @(1);
+    ourDictionary[@"_MSSafeMode"] = @(1);
     return ourDictionary;
 }
 
