@@ -1,0 +1,9 @@
+Package: me.nepeta.unsub
+Name: UnSub
+Depends: mobilesubstrate, ws.hbang.common (>= 1.13)
+Version: 0.1.0
+Architecture: iphoneos-arm
+Description: Disable Substitute in certain apps.
+Maintainer: Nepeta
+Author: Nepeta
+Section: Tweaks

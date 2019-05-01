@@ -1,0 +1,9 @@
+{
+    entry = {
+	bundle = UnSubPrefs;
+	cell = PSLinkCell;
+	detail = USBPrefsListController;
+	isController = 1;
+	label = UnSub;
+    };
+}
