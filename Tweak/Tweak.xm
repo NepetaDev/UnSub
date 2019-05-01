@@ -35,7 +35,7 @@ void updateDisabledApps() {
     NSMutableDictionary *appList = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/me.nepeta.unsub.plist"];
     NSMutableArray *_disabledApps = [[NSMutableArray alloc] init];
     for (NSString *key in appList) {
-        if ([[appList objectForKey:key] boolValue]) {
+        if ([[appList objectForKey:key] boolValue] && ![key isEqualToString:@"com.apple.Preferences"]) {
             [_disabledApps addObject:key];
         }
     }
