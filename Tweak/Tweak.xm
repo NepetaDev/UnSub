@@ -8,6 +8,10 @@ extern "C" void BKSTerminateApplicationForReasonAndReportWithDescription(NSStrin
 
 @end
 
+bool dpkgInvalid = false;
+
+%group UnSub
+
 %hook FBApplicationInfo
 
 -(NSDictionary *)environmentVariables {
@@ -30,6 +34,32 @@ extern "C" void BKSTerminateApplicationForReasonAndReportWithDescription(NSStrin
     ourDictionary[@"_MSSafeMode"] = @(1);
     return ourDictionary;
 }
+
+%end
+
+%end
+
+%group UnSubFail
+
+%hook SpringBoard
+
+-(void)applicationDidFinishLaunching:(id)arg1 {
+    %orig;
+    if (!dpkgInvalid) return;
+    UIAlertController *alertController = [UIAlertController
+        alertControllerWithTitle:@"😡😡😡"
+        message:@"The build of UnSub you're using comes from an untrusted source. Pirate repositories can distribute malware and you will get subpar user experience using any tweaks from them.\nRemember: UnSub is free. Uninstall this build and install the proper version of UnSub from:\nhttps://repo.nepeta.me/\n(it's free, damnit, why would you pirate that!?)"
+        preferredStyle:UIAlertControllerStyleAlert
+    ];
+
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Damn!" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        [((UIApplication*)self).keyWindow.rootViewController dismissViewControllerAnimated:YES completion:NULL];
+    }]];
+
+    [((UIApplication*)self).keyWindow.rootViewController presentViewController:alertController animated:YES completion:NULL];
+}
+
+%end
 
 %end
 
@@ -60,6 +90,14 @@ void updateDisabledApps() {
 }
 
 %ctor {
+    dpkgInvalid = ![[NSFileManager defaultManager] fileExistsAtPath:@"/var/lib/dpkg/info/me.nepeta.unsub.list"];
+
+    if (dpkgInvalid) {
+        %init(UnSubFail);
+        return;
+    }
+
+    %init(UnSub);
     updateDisabledApps();
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)updateDisabledApps, (CFStringRef)@"me.nepeta.unsub/ReloadPrefs", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
 }
