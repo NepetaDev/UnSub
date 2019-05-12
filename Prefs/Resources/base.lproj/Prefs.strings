@@ -2,6 +2,9 @@
   "DISABLE_IN" = "Select apps to disable tweak injection (Substrate/Substitute) in.";
   "SELECT_APPS" = "Disable tweak injection in apps";
 
+  "BYPASS_JAILBREAK_DETECTION" = "Select apps to enable jailbrak detection bypass in.";
+  "SELECT_APPS_BYPASS" = "Bypass jailbreak detection (experimental)";
+
   "RESPRING" = "Respring";
   "ARE_YOU_SURE_TO_RESET_PREFS" = "Are you sure you want to reset all your preferences? This cannot be undone.";
   "OK" = "OK";
