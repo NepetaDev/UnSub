@@ -324,8 +324,10 @@ void updateDisabledApps() {
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)updateDisabledApps, (CFStringRef)@"me.nepeta.unsub/ReloadPrefs", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
     } else {
         NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
+        if (!bundleIdentifier) return;
+        if ([bundleIdentifier hasPrefix:@"com.apple."]) return;
         NSMutableDictionary *appList = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/me.nepeta.unsub-detection.plist"];
-        if (bundleIdentifier && appList && appList[bundleIdentifier] && [appList[bundleIdentifier] boolValue]) {
+        if (appList && appList[bundleIdentifier] && [appList[bundleIdentifier] boolValue]) {
             %init(UnSubBypass);
         }
     }
