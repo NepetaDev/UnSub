@@ -42,7 +42,7 @@ NSArray *jailbreakFiles = @[
 ];
 
 BOOL isJailbreakFileAtPath(NSString *path) {
-    if (![path containsString:@"containers"] && ![path containsString:@"Containers"]) NSLog(@"[UnSub] isjb - %@", path);
+    //if (![path containsString:@"containers"] && ![path containsString:@"Containers"]) NSLog(@"[UnSub] isjb - %@", path);
     for (NSString *file in jailbreakFiles) {
         if ([path hasPrefix:file]) return true;
     }
@@ -107,7 +107,7 @@ bool dpkgInvalid = false;
 
 %hookf(int, system, const char *command) {
     NSLog(@"[UnSub] system - %@", [NSString stringWithUTF8String:command]);
-    return 0;
+    return -1;
 }
 
 NSMutableArray *dyldArray = [NSMutableArray new];
@@ -121,10 +121,12 @@ BOOL bypassDyldArray = NO;
         const char *charName = _dyld_get_image_name(i);
         if (!charName) continue;
         NSString *name = [NSString stringWithUTF8String:charName];
+        if (!name) continue;
         if ([name containsString:@"TweakInject"] ||
         [name containsString:@"Cephei"] ||
         [name containsString:@"Substrate"] ||
         [name containsString:@"substitute"] ||
+        [name containsString:@"substrate"] ||
         [name containsString:@"applist"] ||
         [name containsString:@"rocketbootstrap"] ||
         [name containsString:@"colorpicker"]) continue;
