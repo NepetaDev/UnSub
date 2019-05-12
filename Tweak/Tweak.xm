@@ -30,8 +30,6 @@ NSArray *jailbreakFiles = @[
     @"/System/Library/LaunchDaemons/com.saurik.Cydia.Startup.plist",
     @"/private/var/mobile/Library/SB",
     @"/etc/apt",
-    @"/System/Library/CoreServices/SystemVersion.plist",
-    @"/usr/lib/libmis.dylib",
     @"/private/var/stash",
     @"/private/var/lib/apt",
     @"/private/var/lib/cydia",
