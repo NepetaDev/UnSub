@@ -84,8 +84,9 @@ bool dpkgInvalid = false;
 %group UnSubBypass
 
 %hookf(FILE *, fopen, const char *path, const char *mode) {
+    if (path == NULL) return %orig;
     if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = EACCES;
+        errno = ENOENT;
         return NULL;
     }
     return %orig;
@@ -95,23 +96,62 @@ bool dpkgInvalid = false;
     return -1;
 }
 
-%hookf(int, stat, const char *path, struct stat *buf) {
+%hookf(int, open, const char *path, int flags) {
+    if (path == NULL) return %orig;
+    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
+        errno = ENOENT;
+        return -1;
+    }
+    return %orig;
+}
+
+%hookf(int, creat, const char *path, mode_t mode) {
+    if (path == NULL) return %orig;
     if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
         errno = EACCES;
+        return -1;
+    }
+    return %orig;
+}
+
+%hookf(int, openat, int dirfd, const char *path, int flags) {
+    if (path == NULL) return %orig;
+    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
+        errno = EACCES;
+        return -1;
+    }
+    return %orig;
+}
+
+%hookf(int, stat, const char *path, struct stat *buf) {
+    if (path == NULL) return %orig;
+    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
+        errno = ENOENT;
         return -1;
     }
     return %orig;
 }
 
 %hookf(int, lstat, const char *path, struct stat *buf) {
+    if (path == NULL) return %orig;
     if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = EACCES;
+        errno = ENOENT;
+        return -1;
+    }
+    return %orig;
+}
+
+%hookf(int, access, const char *path, int mode) {
+    if (path == NULL) return %orig;
+    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
+        errno = ENOENT;
         return -1;
     }
     return %orig;
 }
 
 %hookf(FILE *, popen, const char *command, const char *type) {
+    errno = EACCES;
     return NULL;
 }
 
