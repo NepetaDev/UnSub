@@ -43,7 +43,7 @@ NSArray *jailbreakFiles = @[
 ];
 
 BOOL isJailbreakFileAtPath(NSString *path) {
-    //if (![path containsString:@"containers"] && ![path containsString:@"Containers"]) NSLog(@"[UnSub] isjb - %@", path);
+    if (!path || ![path respondsToSelector:@selector(hasPrefix:)]) return false;
     for (NSString *file in jailbreakFiles) {
         if ([path hasPrefix:file]) return true;
     }
@@ -84,12 +84,9 @@ bool dpkgInvalid = false;
 %group UnSubBypass
 
 %hookf(FILE *, fopen, const char *path, const char *mode) {
-    if (path == NULL) return %orig;
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = ENOENT;
-        return NULL;
-    }
-    return %orig;
+    if (path == NULL || !isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return %orig;
+    errno = ENOENT;
+    return NULL;
 }
 
 %hookf(pid_t, fork) {
@@ -97,57 +94,39 @@ bool dpkgInvalid = false;
 }
 
 %hookf(int, open, const char *path, int flags) {
-    if (path == NULL) return %orig;
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = ENOENT;
-        return -1;
-    }
-    return %orig;
+    if (path == NULL || !isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return %orig;
+    errno = ENOENT;
+    return -1;
 }
 
 %hookf(int, creat, const char *path, mode_t mode) {
-    if (path == NULL) return %orig;
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = EACCES;
-        return -1;
-    }
-    return %orig;
+    if (path == NULL || !isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return %orig;
+    errno = EACCES;
+    return -1;
 }
 
 %hookf(int, openat, int dirfd, const char *path, int flags) {
-    if (path == NULL) return %orig;
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = EACCES;
-        return -1;
-    }
-    return %orig;
+    if (path == NULL || !isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return %orig;
+    errno = EACCES;
+    return -1;
 }
 
 %hookf(int, stat, const char *path, struct stat *buf) {
-    if (path == NULL) return %orig;
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = ENOENT;
-        return -1;
-    }
-    return %orig;
+    if (path == NULL || !isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return %orig;
+    errno = ENOENT;
+    return -1;
 }
 
 %hookf(int, lstat, const char *path, struct stat *buf) {
-    if (path == NULL) return %orig;
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = ENOENT;
-        return -1;
-    }
-    return %orig;
+    if (path == NULL || !isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return %orig;
+    errno = ENOENT;
+    return -1;
 }
 
 %hookf(int, access, const char *path, int mode) {
-    if (path == NULL) return %orig;
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
-        errno = ENOENT;
-        return -1;
-    }
-    return %orig;
+    if (path == NULL || !isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return %orig;
+    errno = ENOENT;
+    return -1;
 }
 
 %hookf(FILE *, popen, const char *command, const char *type) {
@@ -160,12 +139,14 @@ bool dpkgInvalid = false;
     return -1;
 }
 
-NSMutableArray *dyldArray = [NSMutableArray new];
+NSMutableArray *dyldArray = nil;
 BOOL bypassDyldArray = NO;
 
 %hookf(uint32_t, _dyld_image_count) {
     uint32_t count = %orig;
-    [dyldArray removeAllObjects];
+    if (dyldArray) return [dyldArray count];
+
+    dyldArray = [NSMutableArray new];
     bypassDyldArray = YES;
     for (int i = 0; i < count; i++) {
         const char *charName = _dyld_get_image_name(i);
@@ -243,7 +224,7 @@ BOOL bypassDyldArray = NO;
 %hook NSData
 
 - (BOOL)writeToFile:(NSString *)path atomically:(BOOL)useAuxiliaryFile {
-    if ([path hasPrefix:@"/private"]) {
+    if ([path respondsToSelector:@selector(hasPrefix:)] && [path hasPrefix:@"/private"]) {
         return NO;
     }
     return %orig;
@@ -254,7 +235,7 @@ BOOL bypassDyldArray = NO;
 %hook NSString
 
 - (BOOL)writeToFile:(NSString *)path atomically:(BOOL)useAuxiliaryFile encoding:(NSStringEncoding)enc error:(NSError * _Nullable *)error {
-    if ([path hasPrefix:@"/private"]) {
+    if ([path respondsToSelector:@selector(hasPrefix:)] && [path hasPrefix:@"/private"]) {
         *error = [NSError errorWithDomain:@"damn" code:69 userInfo:nil];
         return NO;
     }
