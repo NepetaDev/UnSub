@@ -4,6 +4,7 @@
 #import <unistd.h>
 #import <dlfcn.h>
 #import <mach-o/dyld.h>
+#import <errno.h>
 
 NSArray *disabledApps;
 NSArray *bypassedApps;
@@ -83,7 +84,10 @@ bool dpkgInvalid = false;
 %group UnSubBypass
 
 %hookf(FILE *, fopen, const char *path, const char *mode) {
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return NULL;
+    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
+        errno = EACCES;
+        return NULL;
+    }
     return %orig;
 }
 
@@ -92,12 +96,18 @@ bool dpkgInvalid = false;
 }
 
 %hookf(int, stat, const char *path, struct stat *buf) {
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return -1;
+    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
+        errno = EACCES;
+        return -1;
+    }
     return %orig;
 }
 
 %hookf(int, lstat, const char *path, struct stat *buf) {
-    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) return -1;
+    if (isJailbreakFileAtPath([NSString stringWithUTF8String:path])) {
+        errno = EACCES;
+        return -1;
+    }
     return %orig;
 }
 
@@ -106,7 +116,7 @@ bool dpkgInvalid = false;
 }
 
 %hookf(int, system, const char *command) {
-    NSLog(@"[UnSub] system - %@", [NSString stringWithUTF8String:command]);
+    errno = EPERM;
     return -1;
 }
 
