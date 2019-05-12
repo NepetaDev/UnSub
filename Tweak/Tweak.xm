@@ -312,6 +312,8 @@ void updateDisabledApps() {
         }
     }
 
+    disabledApps = _disabledApps;
+
     appList = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/me.nepeta.unsub-detection.plist"];
     NSMutableArray *_bypassedApps = [[NSMutableArray alloc] init];
     for (NSString *key in appList) {
