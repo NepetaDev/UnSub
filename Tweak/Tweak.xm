@@ -11,6 +11,7 @@ NSArray *disabledApps;
 NSArray *bypassedApps;
 NSString *forceTouchBundleId;
 BOOL forceTouchOptionEnabled = YES;
+BOOL twice = NO;
 
 extern "C" void BKSTerminateApplicationForReasonAndReportWithDescription(NSString *bundleID, int reasonID, bool report, NSString *description);
 
@@ -71,15 +72,15 @@ bool dpkgInvalid = false;
 %hook FBApplicationInfo
 
 -(NSDictionary *)environmentVariables {
-    if (![self bundleIdentifier]) return %orig;
-    if (!disabledApps) return %orig;
+    if (![self bundleIdentifier] || (!disabledApps && !forceTouchBundleId)) return %orig;
 
     BOOL found = false;
     NSString *bundleIdentifier = [self bundleIdentifier];
 
     if (forceTouchBundleId && [forceTouchBundleId isEqualToString:bundleIdentifier]) {
         found = true;
-        forceTouchBundleId = nil;
+        if (twice) forceTouchBundleId = nil;
+        twice = YES;
     } else {
         for (NSString *bundleId in disabledApps) {
             if ([bundleIdentifier isEqualToString: bundleId]) {
@@ -127,6 +128,7 @@ bool dpkgInvalid = false;
     if ([[item type] isEqualToString:@"UnSubItem"]) {
         NSString *bundleId = [item bundleIdentifierToLaunch];
         forceTouchBundleId = [bundleId copy];
+        twice = NO;
         BKSTerminateApplicationForReasonAndReportWithDescription(bundleId, 5, false, @"UnSub - force touch, killed");
     }
 
