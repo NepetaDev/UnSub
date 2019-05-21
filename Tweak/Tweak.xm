@@ -1,3 +1,4 @@
+#import "Tweak.h"
 #import <sys/types.h>
 #import <sys/stat.h>
 #import <stdio.h>
@@ -8,6 +9,8 @@
 
 NSArray *disabledApps;
 NSArray *bypassedApps;
+NSString *forceTouchBundleId;
+BOOL forceTouchOptionEnabled = YES;
 
 extern "C" void BKSTerminateApplicationForReasonAndReportWithDescription(NSString *bundleID, int reasonID, bool report, NSString *description);
 
@@ -73,10 +76,16 @@ bool dpkgInvalid = false;
 
     BOOL found = false;
     NSString *bundleIdentifier = [self bundleIdentifier];
-    for (NSString *bundleId in disabledApps) {
-        if ([bundleIdentifier isEqualToString: bundleId]) {
-            found = true;
-            break;
+
+    if (forceTouchBundleId && [forceTouchBundleId isEqualToString:bundleIdentifier]) {
+        found = true;
+        forceTouchBundleId = nil;
+    } else {
+        for (NSString *bundleId in disabledApps) {
+            if ([bundleIdentifier isEqualToString: bundleId]) {
+                found = true;
+                break;
+            }
         }
     }
 
@@ -86,6 +95,54 @@ bool dpkgInvalid = false;
     ourDictionary[@"_SafeMode"] = @(1);
     ourDictionary[@"_MSSafeMode"] = @(1);
     return ourDictionary;
+}
+
+%end
+
+%hook SBUIAppIconForceTouchControllerDataProvider
+
+-(NSArray *)applicationShortcutItems {
+    if (!forceTouchOptionEnabled) return %orig;
+
+    NSString *bundleId = [self applicationBundleIdentifier];
+    if (!bundleId) return %orig;
+
+    NSMutableArray *orig = [%orig mutableCopy];
+    if (!orig) orig = [NSMutableArray new];
+
+    SBSApplicationShortcutItem *item = [[%c(SBSApplicationShortcutItem) alloc] init];
+    item.localizedTitle = @"UnSub";
+    item.localizedSubtitle = @"Disable tweaks";
+    item.bundleIdentifierToLaunch = bundleId;
+    item.type = @"UnSubItem";
+    [orig addObject:item];
+
+    return orig;
+}
+
+%end
+
+%hook SBUIAppIconForceTouchController
+-(void)appIconForceTouchShortcutViewController:(id)arg1 activateApplicationShortcutItem:(SBSApplicationShortcutItem *)item {
+    if ([[item type] isEqualToString:@"UnSubItem"]) {
+        NSString *bundleId = [item bundleIdentifierToLaunch];
+        forceTouchBundleId = [bundleId copy];
+        BKSTerminateApplicationForReasonAndReportWithDescription(bundleId, 5, false, @"UnSub - force touch, killed");
+    }
+
+    %orig;
+}
+
+%end
+
+%hook SBUIAction
+
+-(id)initWithTitle:(id)title subtitle:(id)arg2 image:(id)image badgeView:(id)arg4 handler:(/*^block*/id)arg5 {
+    if ([title isEqualToString:@"UnSub"]) {
+        image = [[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/UnSubPrefs.bundle/forcetouch.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+    }
+
+    return %orig;
 }
 
 %end
