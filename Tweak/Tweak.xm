@@ -19,33 +19,44 @@ extern "C" void BKSTerminateApplicationForReasonAndReportWithDescription(NSStrin
 @end
 
 NSArray *jailbreakFiles = @[
-    @"/bin/bash",
-    @"/bin/sh",
-    @"/Applications/Cydia.app",
-    @"/Applications/Sileo.app",
-    @"/usr/sbin/sshd",
-    @"/usr/bin/ssh",
-    @"/private/var/lib/apt",
-    @"/var/lib/cydia",
-    @"/Library/MobileSubstrate",
-    @"/System/Library/LaunchDaemons/com.saurik.Cydia.Startup.plist",
-    @"/private/var/mobile/Library/SB",
-    @"/etc/apt",
-    @"/private/var/stash",
-    @"/private/var/lib/apt",
-    @"/private/var/lib/cydia",
-    @"/private/var/lib/sileo",
-    @"/private/var/tmp/cydia",
-    @"/private/var/tmp/sileo",
-    @"/var/log/syslog",
-    @"/usr/libexec/ssh",
-    @"/Applications"
+    @"bin/bash",
+    @"bin/sh",
+    @"Applications/Cydia.app",
+    @"Applications/FakeCarrier.app",
+    @"Applications/Sileo.app",
+    @"Applications/Zebra.app",
+    @"usr/sbin/sshd",
+    @"usr/bin/ssh",
+    @"Library/MobileSubstrate",
+    @"Library/LaunchDaemons/com.saurik.Cydia.Startup.plist",
+    @"var/mobile/Library/SB",
+    @"var/cache/apt",
+    @"etc/apt",
+    @"etc/ssh",
+    @"var/stash",
+    @"var/lib/apt",
+    @"var/lib/cydia",
+    @"var/lib/sileo",
+    @"var/tmp/cydia",
+    @"var/tmp/sileo",
+    @"var/log/syslog",
+    @"usr/lib/TweakInject",
+    @"usr/libexec/ssh",
+    @"usr/libexec/sftp-server",
+    @"electra/",
+    @"etc/hosts.thireus",
+    @"System/Library/hosts.lmb",
+    @"/.installed_unc0ver",
+    @"/.cydia_no_stash",
+    @"/Applications",
+    @"/Library/LaunchDaemons"
 ];
 
 BOOL isJailbreakFileAtPath(NSString *path) {
-    if (!path || ![path respondsToSelector:@selector(hasPrefix:)]) return false;
+    if (!path || ![path respondsToSelector:@selector(rangeOfString:)]) return false;
     for (NSString *file in jailbreakFiles) {
-        if ([path hasPrefix:file]) return true;
+        if ([file characterAtIndex:0] == '/' && [path respondsToSelector:@selector(hasPrefix:)] && [path hasPrefix:file]) return true;
+        if ([path rangeOfString:file].location != NSNotFound) return true;
     }
     return false;
 }
@@ -139,6 +150,16 @@ bool dpkgInvalid = false;
     return -1;
 }
 
+%hookf(char *, getenv, const char *name) {
+    if (!name) return %orig;
+    NSString *key = [NSString stringWithUTF8String:name];
+
+    if (key && ([key isEqualToString:@"DYLD_INSERT_LIBRARIES"] ||
+        [key hasPrefix:@"_"])) return NULL;
+
+    return %orig;
+}
+
 NSMutableArray *dyldArray = nil;
 BOOL bypassDyldArray = NO;
 
@@ -175,9 +196,17 @@ BOOL bypassDyldArray = NO;
 
 %hook UIApplication
 
--(bool)canOpenURL:(NSString *)url {
-    //temporary
-    return NO;
+-(bool)canOpenURL:(NSURL *)url {
+    if (url && [url respondsToSelector:@selector(absoluteString)] && [url absoluteString]) {
+        NSString *absString = [url absoluteString];
+        if ([absString containsString:@"zebra"] ||
+        [absString containsString:@"sileo"] ||
+        [absString containsString:@"cydia"]) {
+            return NO;
+        }
+    }
+
+    return %orig;
 }
 
 %end
