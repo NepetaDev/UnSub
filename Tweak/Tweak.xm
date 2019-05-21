@@ -259,6 +259,7 @@ BOOL bypassDyldArray = NO;
     if (url && [url respondsToSelector:@selector(absoluteString)] && [url absoluteString]) {
         NSString *absString = [url absoluteString];
         if ([absString containsString:@"zebra"] ||
+        [absString containsString:@"zbra"] ||
         [absString containsString:@"sileo"] ||
         [absString containsString:@"cydia"]) {
             return NO;
