@@ -1,4 +1,5 @@
 #import "Tweak.h"
+#import <Cephei/HBPreferences.h>
 #import <sys/types.h>
 #import <sys/stat.h>
 #import <stdio.h>
@@ -7,10 +8,11 @@
 #import <mach-o/dyld.h>
 #import <errno.h>
 
+HBPreferences *preferences;
 NSArray *disabledApps;
 NSArray *bypassedApps;
 NSString *forceTouchBundleId;
-BOOL forceTouchOptionEnabled = YES;
+BOOL forceTouchOptionEnabled;
 BOOL twice = NO;
 
 extern "C" void BKSTerminateApplicationForReasonAndReportWithDescription(NSString *bundleID, int reasonID, bool report, NSString *description);
@@ -125,6 +127,8 @@ bool dpkgInvalid = false;
 
 %hook SBUIAppIconForceTouchController
 -(void)appIconForceTouchShortcutViewController:(id)arg1 activateApplicationShortcutItem:(SBSApplicationShortcutItem *)item {
+    if (!forceTouchOptionEnabled) return %orig;
+    
     if ([[item type] isEqualToString:@"UnSubItem"]) {
         NSString *bundleId = [item bundleIdentifierToLaunch];
         forceTouchBundleId = [bundleId copy];
@@ -442,6 +446,10 @@ void updateDisabledApps() {
             %init(UnSubFail);
             return;
         }
+
+        preferences = [[HBPreferences alloc] initWithIdentifier:@"me.nepeta.unsub"];
+        [preferences registerBool:&forceTouchOptionEnabled default:YES forKey:@"ForceTouchOptionEnabled"];
+
         %init(UnSub);
 
         updateDisabledApps();

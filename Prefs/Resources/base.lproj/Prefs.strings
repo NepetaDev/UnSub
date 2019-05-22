@@ -1,4 +1,6 @@
 {
+  "FORCE_TOUCH_OPTION_ENABLED" = "Enable force touch UnSub option";
+
   "DISABLE_IN" = "Select apps to disable tweak injection (Substrate/Substitute) in.";
   "SELECT_APPS" = "Disable tweak injection in apps";
 
