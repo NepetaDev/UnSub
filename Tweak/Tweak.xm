@@ -107,8 +107,8 @@ bool dpkgInvalid = false;
 -(NSArray *)applicationShortcutItems {
     if (!forceTouchOptionEnabled) return %orig;
 
-    NSString *bundleId = [self applicationBundleIdentifier];
-    if (!bundleId) return %orig;
+    NSString *bundleIdentifier = [self applicationBundleIdentifier];
+    if (!bundleIdentifier) return %orig;
 
     NSMutableArray *orig = [%orig mutableCopy];
     if (!orig) orig = [NSMutableArray new];
@@ -116,7 +116,15 @@ bool dpkgInvalid = false;
     SBSApplicationShortcutItem *item = [[%c(SBSApplicationShortcutItem) alloc] init];
     item.localizedTitle = @"UnSub";
     item.localizedSubtitle = @"Disable tweaks";
-    item.bundleIdentifierToLaunch = bundleId;
+
+    for (NSString *bundleId in disabledApps) {
+        if ([bundleIdentifier isEqualToString: bundleId]) {
+            item.localizedSubtitle = @"Tweaks already disabled";
+            break;
+        }
+    }
+
+    item.bundleIdentifierToLaunch = bundleIdentifier;
     item.type = @"UnSubItem";
     [orig addObject:item];
 
@@ -128,7 +136,7 @@ bool dpkgInvalid = false;
 %hook SBUIAppIconForceTouchController
 -(void)appIconForceTouchShortcutViewController:(id)arg1 activateApplicationShortcutItem:(SBSApplicationShortcutItem *)item {
     if (!forceTouchOptionEnabled) return %orig;
-    
+
     if ([[item type] isEqualToString:@"UnSubItem"]) {
         NSString *bundleId = [item bundleIdentifierToLaunch];
         forceTouchBundleId = [bundleId copy];
